@@ -1,7 +1,7 @@
 package pt.unl.fct.pds;
 
-import pt.unl.fct.pds.project2.model.Node;
-import pt.unl.fct.pds.project2.model.Circuit;
+import pt.unl.fct.pds.model.Node;
+import pt.unl.fct.pds.model.Circuit;
 import pt.unl.fct.pds.project2.utils.ConsensusParser;
 
 
