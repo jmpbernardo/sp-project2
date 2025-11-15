@@ -1,8 +1,8 @@
 package pt.unl.fct.pds;
 
+
 import pt.unl.fct.pds.model.Node;
-import pt.unl.fct.pds.model.Circuit;
-import pt.unl.fct.pds.project2.utils.ConsensusParser;
+import pt.unl.fct.pds.utils.ConsensusParser;
 
 
 /**
@@ -13,7 +13,12 @@ public class Project2
 {
     public static void main( String[] args )
     {
-        // Here we write our logic to choose circuits!
-        System.out.println("Welcome to the Circuit Simulator!");
+      ConsensusParser parser = new ConsensusParser("src/consensus_files/consensus_1.txt");
+      Node[] nodes = parser.parseConsensus();
+      System.out.println(nodes.length + '\n');
+
+      System.out.println(nodes[0].getBandwidth());
+      System.out.println(nodes[0].getIpAddress());
+      System.out.println(nodes[0].getCountry());
     }
 }

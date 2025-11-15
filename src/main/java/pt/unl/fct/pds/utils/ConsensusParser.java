@@ -1,28 +1,36 @@
 package pt.unl.fct.pds.utils;
 
-import com.maxmind.geoip2.WebServiceClient;
-import com.maxmind.geoip2.exception.GeoIp2Exception;
-import com.maxmind.geoip2.model.CountryResponse;
-import com.maxmind.geoip2.record.Country;
+import io.github.cdimascio.dotenv.Dotenv;
+
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
 import java.net.InetAddress;
+import java.net.URL;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
 import pt.unl.fct.pds.model.Node;
 
 public class ConsensusParser {
 
   private final int N_NODES = 60;
   private String filename;
-  private static final String accountId = System.getenv("ACCOUNT_ID");
-  private static final String licenseKey = System.getenv("LICENSE_KEY");
+  private static final Dotenv dotenv = Dotenv.configure().load();
 
+  private static final String accountId = dotenv.get("MAXMIND_ACCOUNT_ID");
+  private static final String licenseKey = dotenv.get("MAXMIND_LICENSE_KEY");
+  File database = new File("src/GeoLite2-Country_20251114/GeoLite2-Country.mmdb");
 
   public ConsensusParser() {
   }
@@ -43,7 +51,8 @@ public class ConsensusParser {
     if (filename == null )
       System.err.println("filename not found");
 
-    List<Node> nodes = new ArrayList<>(N_NODES);
+    List<Node> nodes = new ArrayList<>();
+
     try (BufferedReader reader = new BufferedReader(new FileReader(filename), 16384)) {
       String line;
       Node currentNode = null;
@@ -52,48 +61,34 @@ public class ConsensusParser {
         if (line.isEmpty())
           continue;
 
-        char lineType = line.charAt(0);
-        switch (lineType) {
-          case 'r':
-            if (currentNode != null)
-              nodes.add(currentNode);
-
-            currentNode = parseNode(line);
-            break;
-
-          case 'a':
-            continue; //optional
-
-          case 's':
-            if (currentNode != null)
-              parseFlags(line, currentNode);
-            break;
-
-          case 'v':
-            if (currentNode != null)
-              parseVersion(line, currentNode);
-            break;
-
-          case 'p':
-            if (currentNode != null) {
-              if (line.startsWith("pr"))
-                continue; // optional??
-              else
-                parseExitPolicy(line, currentNode);
-            }
-            break;
-
-          case 'w':
-            if (currentNode != null)
-              parseBandwidth(line, currentNode);
-            break;
-
-
-          default:
-            break;
+        if (line.startsWith("r ")) {
+          if (currentNode != null)
+            nodes.add(currentNode);
+          currentNode = parseNode(line);
+        }
+        else if (line.startsWith("a ")) {
+          continue;
+        }
+        else if (line.startsWith("s ")) {
+          if (currentNode != null)
+            parseFlags(line, currentNode);
+        }
+        else if (line.startsWith("v ")) {
+          if (currentNode != null)
+            parseVersion(line, currentNode);
+        }
+        else if (line.startsWith("pr ")) {
+          continue; // protocol list, optional
+        }
+        else if (line.startsWith("p ")) {
+          if (currentNode != null)
+            parseExitPolicy(line, currentNode);
+        }
+        else if (line.startsWith("w ")) {
+          if (currentNode != null)
+            parseBandwidth(line, currentNode);
         }
       }
-
       if (currentNode != null)
         nodes.add(currentNode);
     }
@@ -103,21 +98,75 @@ public class ConsensusParser {
     return nodes.toArray(new Node[0]);
   }
 
-  public String geolocateIP(String ipAddress) throws IOException {
+  //TODO: change due to query limits
+  /*public String geolocateIP(String ipAddress) throws IOException {
+    if (accountId == null || licenseKey == null) {
+      System.err.println("EVN variables not set");
+    }
 
-    try (WebServiceClient client = new WebServiceClient.Builder(Integer.parseInt(accountId), licenseKey).build()) {
-
+    //try (WebServiceClient client = new WebServiceClient.Builder(Integer.parseInt(accountId), licenseKey).host("geolite.info").build()) {
+    try (DatabaseReader reader = new DatabaseReader.Builder(database).withCache(new CHMCache())
+        .build()) {
       InetAddress ip = InetAddress.getByName(ipAddress);
-      CountryResponse response = client.country(ip);
+      CountryResponse response = reader.country(ip);
 
       Country country = response.getCountry();
       return country.getName();
     } catch (GeoIp2Exception e) {
       throw new RuntimeException(e);
     }
+  }*/
+  //TODO: change due to query limits
+  public String geolocateIP(String ipAddress) throws IOException {
+    if (accountId == null || licenseKey == null) {
+      System.err.println("EVN variables not set");
+    }
+    try {
+        URL url = new URL("https://api.ipquery.io/" + ipAddress);
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("GET");
+        conn.setRequestProperty("Accept", "application/json");
+
+        if (conn.getResponseCode() != 200) {
+          throw new RuntimeException("error code: " + conn.getResponseCode());
+        }
+
+        // Read response
+        BufferedReader reader = new BufferedReader(
+            new InputStreamReader(conn.getInputStream()));
+        StringBuilder response = new StringBuilder();
+        String line;
+
+        while ((line = reader.readLine()) != null) {
+          response.append(line);
+        }
+        reader.close();
+
+        // Parse JSON with Gson
+        JsonObject jsonObject = JsonParser.parseString(response.toString()).getAsJsonObject();
+
+        // Navigate to nested "location" object
+        if (jsonObject.has("location")) {
+          JsonObject location = jsonObject.getAsJsonObject("location");
+          if (location.has("country")) {
+            return location.get("country").getAsString();
+          }
+        }
+
+        return "Unknown";
+
+      } catch (Exception e) {
+        System.err.println("Failed to geolocate " + ipAddress + ": " + e.getMessage());
+        return "Unknown";
+      }
   }
 
+
   private Node parseNode(String line) throws IOException {
+    if (!line.startsWith("r ")) {
+      System.err.println("line " + line);
+    }
+
     Node node = new Node();
     String[] parts = line.split(" ");
 
@@ -125,10 +174,9 @@ public class ConsensusParser {
       node.setNickname(parts[1]);
       node.setFingerprint(parts[2]);
 
-      String timeStr = parts[4];
-      //TODO: Check time format ("yyyy-MM-dd HH:mm:ss")
-      LocalDateTime time = LocalDateTime.parse(timeStr, DateTimeFormatter.ofPattern("HH:mm:ss"));
-      node.setTimePublished(time);
+    String dateTimeStr = parts[4] + " " + parts[5];
+    LocalDateTime time = LocalDateTime.parse(dateTimeStr, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+    node.setTimePublished(time);
 
       String ip = parts[6];
       node.setIpAddress(ip);
@@ -158,8 +206,11 @@ public class ConsensusParser {
 
     private void parseBandwidth(String line, Node node) {
       // w Bandwidth=<value>
-      String[] parts = line.split("=");
-      int bandwidth = Integer.parseInt(parts[1].trim());
+
+      //TODO: check what to do in this case ( w Bandwidth=0 Unmeasured=1 )
+      String[] parts = line.split(" ");
+      String[] value = parts[1].split("=");
+      int bandwidth = Integer.parseInt(value[1].trim());
       node.setBandwidth(bandwidth);
     }
 
