@@ -4,11 +4,11 @@ import pt.unl.fct.pds.model.Node;
 
 public interface PathSelection {
 
-    Path selectPath();
+    Node[] selectPath();
 
     Node selectExit();
 
-    Node selectGuard();
+    Node selectGuard(Node exit);
 
     Node selectMiddle(Node guard, Node exit);
 }

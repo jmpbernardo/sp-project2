@@ -6,7 +6,7 @@ public class GeographyAwarePathSelection implements PathSelection {
 
 
     @Override
-    public Path selectPath() {
+    public Node[] selectPath() {
         // TODO("Implement GeographyAwarePathSelection.selectPath");
         return null;
     }
@@ -18,7 +18,7 @@ public class GeographyAwarePathSelection implements PathSelection {
     }
 
     @Override
-    public Node selectGuard() {
+    public Node selectGuard(Node exit) {
         // TODO("Implement GeographyAwarePathSelection.selectGuard");
         return null;
     }
