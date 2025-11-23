@@ -31,7 +31,8 @@ public class Project2 {
         // For each address ...
         for (int i = 0; i < addresses.length; i++) {
             // ... select path ...
-            PathSelection pathSelection = new CurrentPathSelection(nodes, addresses[i]);
+            Address address = addresses[i];
+            PathSelection pathSelection = new CurrentPathSelection(nodes, address);
             Node[] pathNodes = pathSelection.selectPath();
             int minBandwidth = Arrays.stream(pathNodes)
                                     .mapToInt(Node::getBandwidth)
@@ -40,12 +41,23 @@ public class Project2 {
 
             // ... and create circuit.
             Circuit circuit = new Circuit(i, pathNodes, minBandwidth);
-            System.out.println("Circuit " + circuit.getId() + ":");
-            System.out.println("  Guard: " + pathNodes[0].getFingerprint());
-            System.out.println("  Middle: " + pathNodes[1].getFingerprint());
-            System.out.println("  Exit: " + pathNodes[2].getFingerprint());
-            System.out.println("  Min Bandwidth: " + circuit.getMinBandwidth());
+            Node guard = pathNodes[0];
+            Node middle = pathNodes[1];
+            Node exit = pathNodes[2];
+
+            System.out.println("Circuit " + circuit.getId() + " (destination: " + address.toString() + "):");
+            System.out.print("  Guard: ");
+            printNodeInfo(guard);
+            System.out.print("  Middle: ");
+            printNodeInfo(middle);
+            System.out.print("  Exit: ");
+            printNodeInfo(exit);
+            System.out.println("  Minimum Bandwidth: " + circuit.getMinBandwidth());
             System.out.println("---------------------------");
         }
+    }
+
+    private static void printNodeInfo(Node node) {
+        System.out.println(node.getNickname() + " " + node.getFingerprint() + " " + node.getIpAddress());
     }
 }
