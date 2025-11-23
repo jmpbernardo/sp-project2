@@ -16,21 +16,22 @@ public class PathSelectionUtils {
         return Arrays.stream(nodes)
                 .flatMap(node ->
                         Arrays.stream(new CandidateNode[] {
-                                new CandidateNode(node, node.getBandwidth() / totalBandwidth)
+                                new CandidateNode(node, (double) node.getBandwidth() / (double) totalBandwidth)
                         })
                 ).toArray(CandidateNode[]::new);
     }
 
     public static Node randomWeightedSelection(CandidateNode[] candidateNodes, int totalBandwidth) {
-        int randomValue = (int) (Math.random() * totalBandwidth);
-        int cumulativeBandwidth = 0;
+        double randomValue = Math.random();
+        double cumulativeBandwidth = 0.0;
         for (CandidateNode candidate : candidateNodes) {
             cumulativeBandwidth += candidate.getWeightedBandwidth();
             if (randomValue < cumulativeBandwidth) {
                 return candidate.getNode();
             }
         }
-        return null;
+        // Fallback.
+        return candidateNodes[candidateNodes.length - 1].getNode();
     }
 
     public static boolean isSame16Subnet(String ip1, String ip2) {
