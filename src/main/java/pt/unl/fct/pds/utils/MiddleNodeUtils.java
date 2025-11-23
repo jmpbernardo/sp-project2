@@ -10,7 +10,7 @@ import static pt.unl.fct.pds.utils.PathSelectionUtils.isSameFamily;
 
 public class MiddleNodeUtils {
 
-    public static Node[] getMiddleNodes(Node[] nodes, Node guard, Node exit) {
+    public static Node[] filterMiddleNodes(Node[] nodes, Node guard, Node exit) {
         return Arrays.stream(nodes)
                 .filter(node -> {
                     List<String> flags = Arrays.asList(node.getFlags());
