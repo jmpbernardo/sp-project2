@@ -92,13 +92,10 @@ public class GuardNodeUtils {
     public static Node[] filterGuardSetNodes(Set<Node> guardSet, Node exit, Node[] nodes) {
         while (true) {
             Node[] guardSetFiltered =  guardSet.stream()
-                    .filter(node -> {
-                        List<String> flags = Arrays.asList(node.getFlags());
-                        return flags.contains("Guard") && flags.contains("Running")
-                                && !node.getFingerprint().equals(exit.getFingerprint())
+                    .filter(node -> !node.getFingerprint().equals(exit.getFingerprint())
                                 && !isSame16Subnet(node.getIpAddress(), exit.getIpAddress())
-                                && !isSameFamily(node, exit);
-                    })
+                                && !isSameFamily(node, exit)
+                    )
                     .toArray(Node[]::new);
 
             // TODO: Confirm how Tor behaves in this case
