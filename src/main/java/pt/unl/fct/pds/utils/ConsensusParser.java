@@ -24,13 +24,7 @@ import pt.unl.fct.pds.model.Node;
 
 public class ConsensusParser {
 
-  private final int N_NODES = 60;
   private String filename;
-  private static final Dotenv dotenv = Dotenv.configure().load();
-
-  private static final String accountId = dotenv.get("MAXMIND_ACCOUNT_ID");
-  private static final String licenseKey = dotenv.get("MAXMIND_LICENSE_KEY");
-  File database = new File("src/GeoLite2-Country_20251114/GeoLite2-Country.mmdb");
 
   public ConsensusParser() {
   }
@@ -116,11 +110,7 @@ public class ConsensusParser {
       throw new RuntimeException(e);
     }
   }*/
-  //TODO: change due to query limits
   public String geolocateIP(String ipAddress) throws IOException {
-    if (accountId == null || licenseKey == null) {
-      System.err.println("EVN variables not set");
-    }
     try {
         URL url = new URL("https://api.ipquery.io/" + ipAddress);
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -206,8 +196,6 @@ public class ConsensusParser {
 
     private void parseBandwidth(String line, Node node) {
       // w Bandwidth=<value>
-
-      //TODO: check what to do in this case ( w Bandwidth=0 Unmeasured=1 )
       String[] parts = line.split(" ");
       String[] value = parts[1].split("=");
       int bandwidth = Integer.parseInt(value[1].trim());
@@ -215,8 +203,9 @@ public class ConsensusParser {
     }
 
     private void parseExitPolicy(String line, Node node) {
-      //p <ExitPolicy>
-      String[] parts = line.split(" ");
-      node.setVersion(parts[1]);
+      //p <policy> <ports>
+      String[] parts = line.split(" ", 2);
+      String policy = parts[1]; //with ports
+      node.setExitPolicy(policy);
     }
 }
