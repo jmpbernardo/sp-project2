@@ -15,6 +15,7 @@ public class Node {
     private int bandwidth;
     private String country;
     private String exitPolicy;
+    private String[] family;
 
     public Node() {}
 
@@ -29,7 +30,9 @@ public class Node {
                 String version,
                 int bandwidth,
                 String country,
-                String exitPolicy)
+                String exitPolicy,
+                String[] family
+    )
     {
         this.nickname = nickname;
         this.fingerprint = fingerprint;
@@ -42,6 +45,7 @@ public class Node {
         this.bandwidth = bandwidth;
         this.country = country;
         this.exitPolicy = exitPolicy;
+        this.family = Arrays.copyOf(family, family.length);
     }
 
     public String getNickname() {return nickname;}
@@ -55,6 +59,7 @@ public class Node {
     public int getBandwidth() {return bandwidth;}
     public String getCountry() {return country;}
     public String getExitPolicy() {return exitPolicy;}
+    public String[] getFamily() {return family;}
 
     
     public void setNickname(String nickname) {this.nickname = nickname;}
@@ -68,4 +73,5 @@ public class Node {
     public void setBandwidth(int bandwidth) {this.bandwidth = bandwidth;}
     public void setCountry(String country) {this.country = country;}
     public void setExitPolicy(String exitPolicy) {this.exitPolicy = exitPolicy;}
+    public void setFamily(String[] family) { this.family = Arrays.copyOf(family, family.length); }
 }

@@ -18,9 +18,12 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 
 import pt.unl.fct.pds.model.Node;
+
+import static pt.unl.fct.pds.utils.NodeFamilyUtils.*;
 
 public class ConsensusParser {
 
@@ -41,11 +44,14 @@ public class ConsensusParser {
     this.filename = filename;
   }
 
-  public Node[] parseConsensus() {
+  public Node[] parseConsensus() throws Exception {
     if (filename == null )
       System.err.println("filename not found");
 
     List<Node> nodes = new ArrayList<>();
+
+    // Get all families
+    HashMap<String, String[]> nodeFamilies = getNodeFamilies();
 
     try (BufferedReader reader = new BufferedReader(new FileReader(filename), 16384)) {
       String line;
@@ -59,6 +65,7 @@ public class ConsensusParser {
           if (currentNode != null)
             nodes.add(currentNode);
           currentNode = parseNode(line);
+          currentNode.setFamily(getNodeFamily(currentNode.getFingerprint(), nodeFamilies));
         }
         else if (line.startsWith("a ")) {
           continue;

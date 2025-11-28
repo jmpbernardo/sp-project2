@@ -42,8 +42,10 @@ public class PathSelectionUtils {
         return ip1Parts[0].equals(ip2Parts[0]) && ip1Parts[1].equals(ip2Parts[1]);
     }
 
-    // TODO("Use library to parse family")
     public static boolean isSameFamily(Node node1, Node node2) {
-        return false;
+        String[] node1Family = node1.getFamily();
+        String[] node2Family = node2.getFamily();
+
+        return Arrays.asList(node1Family).contains(node2.getFingerprint()) && Arrays.asList(node2Family).contains(node1.getFingerprint());
     }
 }

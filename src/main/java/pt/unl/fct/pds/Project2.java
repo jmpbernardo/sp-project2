@@ -18,7 +18,7 @@ import java.util.Arrays;
  *
  */
 public class Project2 {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         // Parse consensus file.
         String consensusFilePath = "src/consensus_files/consensus_1.txt";
         ConsensusParser consensusParser = new ConsensusParser(consensusFilePath);

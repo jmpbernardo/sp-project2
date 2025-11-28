@@ -32,13 +32,13 @@ public class Project2Test {
   private static Set<String> guardSet;
 
   @BeforeClass
-  public static void setUpTest() throws IOException {
+  public static void setUpTest() throws Exception {
     loadConsensusNodes();
     loadAddresses();
     loadGuardSet();
   }
 
-  private static void loadConsensusNodes() throws IOException {
+  private static void loadConsensusNodes() throws Exception {
     String consensusPath = "src/consensus_files/consensus_1.txt";
     ConsensusParser parser = new ConsensusParser(consensusPath);
     nodes = parser.parseConsensus();
