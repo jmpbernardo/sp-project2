@@ -22,7 +22,7 @@ public class PathSelectionUtils {
     }
 
     public static Node randomWeightedSelection(CandidateNode[] candidateNodes, int totalBandwidth) {
-        double randomValue = Math.random();
+        double randomValue = Math.random() * totalBandwidth;
         double cumulativeBandwidth = 0.0;
         for (CandidateNode candidate : candidateNodes) {
             cumulativeBandwidth += candidate.getWeightedBandwidth();

@@ -99,7 +99,6 @@ public class GuardNodeUtils {
           )
           .toArray(Node[]::new);
 
-      // TODO: Confirm how Tor behaves in this case
       if (guardSetFiltered.length == 0) {
         guardSet.clear();
         guardSet.addAll(createOrLoadGuardSet(nodes));
