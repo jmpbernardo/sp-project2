@@ -11,9 +11,19 @@ public class CandidateNode {
         this.weightedBandwidth = weightedBandwidth;
     }
 
-    public Node getNode() { return node; }
-    public double getWeightedBandwidth() { return weightedBandwidth; }
+    public Node getNode() {
+        return node;
+    }
 
-    public void setNode(Node node) { this.node = node; }
-    public void setWeightedBandwidth(double weightedBandwidth) { this.weightedBandwidth = weightedBandwidth; }
+    public double getWeightedBandwidth() {
+        return weightedBandwidth;
+    }
+
+    public void setNode(Node node) {
+        this.node = node;
+    }
+
+    public void setWeightedBandwidth(double weightedBandwidth) {
+        this.weightedBandwidth = weightedBandwidth;
+    }
 }

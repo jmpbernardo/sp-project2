@@ -21,116 +21,122 @@ import static pt.unl.fct.pds.utils.PathSelectionUtils.randomWeightedSelection;
 
 public class GuardNodeUtils {
 
-  private static final String GUARD_SET_FILENAME = "guard_set.txt";
-  private static final Path GUARD_SET_PATH = Path.of(GUARD_SET_FILENAME);
+    private static final String GUARD_SET_FILENAME = "guard_set.txt";
+    private static final Path GUARD_SET_PATH = Path.of(GUARD_SET_FILENAME);
 
-  public static Set<Node> createOrLoadGuardSet(Node[] nodes) {
-    // Load
-    Set<Node> loaded = loadGuardSet(nodes);
-    if (!loaded.isEmpty()) {
-      return loaded;
+    public static Set<Node> createOrLoadGuardSet(Node[] nodes) {
+        // Load
+        Set<Node> loaded = loadGuardSet(nodes);
+        if (!loaded.isEmpty()) {
+            return loaded;
+        }
+
+        // Create
+        Node[] guardNodes = Arrays.stream(nodes)
+                .filter(node -> {
+                    List<String> flags = Arrays.asList(node.getFlags());
+                    return flags.contains("Guard") && flags.contains("Running");
+                })
+                .toArray(Node[]::new);
+
+        int totalBandwidthGuardNodes = calculateTotalBandwidth(guardNodes);
+        CandidateNode[] candidatesGuardNodes = createCandidateNodes(guardNodes,
+                totalBandwidthGuardNodes);
+
+        Set<Node> guardSet = new HashSet<>();
+        while (guardSet.size() < 3) {
+            guardSet.add(randomWeightedSelection(candidatesGuardNodes, totalBandwidthGuardNodes));
+        }
+        saveGuardSet(guardSet);
+
+        return guardSet;
     }
 
-    // Create
-    Node[] guardNodes = Arrays.stream(nodes)
-        .filter(node -> {
-          List<String> flags = Arrays.asList(node.getFlags());
-          return flags.contains("Guard") && flags.contains("Running");
-        })
-        .toArray(Node[]::new);
-
-    int totalBandwidthGuardNodes = calculateTotalBandwidth(guardNodes);
-    CandidateNode[] candidatesGuardNodes = createCandidateNodes(guardNodes,
-        totalBandwidthGuardNodes);
-
-    Set<Node> guardSet = new HashSet<>();
-    while (guardSet.size() < 3) {
-      guardSet.add(randomWeightedSelection(candidatesGuardNodes, totalBandwidthGuardNodes));
+    private static Set<Node> loadGuardSet(Node[] nodes) {
+        if (!Files.exists(GUARD_SET_PATH)) {
+            return Collections.emptySet();
+        }
+        Set<Node> result = new HashSet<>();
+        try {
+            List<String> lines = Files.readAllLines(GUARD_SET_PATH);
+            for (String line : lines) {
+                String fingerprint = line.trim();
+                Arrays.stream(nodes)
+                        .filter(node -> node.getFingerprint().equals(fingerprint))
+                        .findFirst()
+                        .ifPresent(result::add);
+            }
+            // NODE: The possibility that the nodes might no longer be in consensus or might be unavailable was not considered.
+        } catch (IOException e) {
+            return Collections.emptySet();
+        }
+        return result;
     }
-    saveGuardSet(guardSet);
 
-    return guardSet;
-  }
-
-  private static Set<Node> loadGuardSet(Node[] nodes) {
-    if (!Files.exists(GUARD_SET_PATH)) {
-      return Collections.emptySet();
+    private static void saveGuardSet(Set<Node> guardSet) {
+        List<String> fingerprints = guardSet.stream()
+                .map(Node::getFingerprint)
+                .collect(Collectors.toList());
+        try {
+            Files.write(
+                    GUARD_SET_PATH,
+                    fingerprints,
+                    StandardOpenOption.CREATE,
+                    StandardOpenOption.TRUNCATE_EXISTING,
+                    StandardOpenOption.WRITE
+            );
+        } catch (IOException e) {
+            System.out.println("[ERROR] Could not save guard set to file: " + e.getMessage());
+        }
     }
-    Set<Node> result = new HashSet<>();
-    try {
-      List<String> lines = Files.readAllLines(GUARD_SET_PATH);
-      for (String line : lines) {
-        String fingerprint = line.trim();
-        Arrays.stream(nodes)
-            .filter(node -> node.getFingerprint().equals(fingerprint))
-            .findFirst()
-            .ifPresent(result::add);
-      }
-      // NODE: The possibility that the nodes might no longer be in consensus or might be unavailable was not considered.
-    } catch (IOException e) {
-      return Collections.emptySet();
+
+    public static Node[] filterGuardSetNodes(Set<Node> guardSet, Node exit, Node[] nodes) {
+        while (true) {
+            Node[] guardSetFiltered = guardSet.stream()
+                    .filter(node -> !node.getFingerprint().equals(exit.getFingerprint())
+                            && !isSame16Subnet(node.getIpAddress(), exit.getIpAddress())
+                            && !isSameFamily(node, exit)
+                    )
+                    .toArray(Node[]::new);
+
+            if (guardSetFiltered.length == 0) {
+                try {
+                    Files.delete(GUARD_SET_PATH);
+                } catch (Exception e) {
+                    System.out.println("[ERROR] Could not delete guard set file: " + e.getMessage());
+                    continue;
+                }
+                guardSet.clear();
+                guardSet.addAll(createOrLoadGuardSet(nodes));
+                continue;
+            }
+            return guardSetFiltered;
+        }
     }
-    return result;
-  }
 
-  private static void saveGuardSet(Set<Node> guardSet) {
-    List<String> fingerprints = guardSet.stream()
-        .map(Node::getFingerprint)
-        .collect(Collectors.toList());
-    try {
-      Files.write(
-          GUARD_SET_PATH,
-          fingerprints,
-          StandardOpenOption.CREATE,
-          StandardOpenOption.TRUNCATE_EXISTING,
-          StandardOpenOption.WRITE
-      );
-    } catch (IOException e) {
-      System.out.println("[ERROR] Could not save guard set to file: " + e.getMessage());
+    public static CandidateNode[] geoWeightedCandidates(
+            Node[] guardSetFiltered,
+            Set<String> circuitCountries,
+            double alpha) {
+
+        CandidateNode[] candidates = new CandidateNode[guardSetFiltered.length];
+        int[] weights = new int[guardSetFiltered.length];
+        int totalWeight = 0;
+
+        for (int i = 0; i < guardSetFiltered.length; i++) {
+            Node node = guardSetFiltered[i];
+            int weight = node.getBandwidth();
+
+            if (!circuitCountries.contains(node.getCountry())) {
+                weight = (int) (weight * (1 + alpha));
+            }
+            weights[i] = weight;
+            totalWeight += weight;
+        }
+        for (int i = 0; i < guardSetFiltered.length; i++) {
+            double normalized = (double) weights[i] / (double) totalWeight;
+            candidates[i] = new CandidateNode(guardSetFiltered[i], normalized);
+        }
+        return candidates;
     }
-  }
-
-  public static Node[] filterGuardSetNodes(Set<Node> guardSet, Node exit, Node[] nodes) {
-    while (true) {
-      Node[] guardSetFiltered = guardSet.stream()
-          .filter(node -> !node.getFingerprint().equals(exit.getFingerprint())
-              && !isSame16Subnet(node.getIpAddress(), exit.getIpAddress())
-              && !isSameFamily(node, exit)
-          )
-          .toArray(Node[]::new);
-
-      if (guardSetFiltered.length == 0) {
-        guardSet.clear();
-        guardSet.addAll(createOrLoadGuardSet(nodes));
-        continue;
-      }
-      return guardSetFiltered;
-    }
-  }
-
-  public static CandidateNode[] geoWeightedCandidates(
-      Node[] guardSetFiltered,
-      Set<String> circuitCountries,
-      double alpha) {
-
-    CandidateNode[] candidates = new CandidateNode[guardSetFiltered.length];
-    int[] weights = new int[guardSetFiltered.length];
-    int totalWeight = 0;
-
-    for (int i = 0; i < guardSetFiltered.length; i++) {
-      Node node = guardSetFiltered[i];
-      int weight = node.getBandwidth();
-
-      if (!circuitCountries.contains(node.getCountry())) {
-        weight = (int) (weight * (1 + alpha));
-      }
-      weights[i] = weight;
-      totalWeight += weight;
-    }
-    for (int i = 0; i < guardSetFiltered.length; i++) {
-      double normalized = (double) weights[i] / (double) totalWeight;
-      candidates[i] = new CandidateNode(guardSetFiltered[i], normalized);
-    }
-    return candidates;
-  }
 }

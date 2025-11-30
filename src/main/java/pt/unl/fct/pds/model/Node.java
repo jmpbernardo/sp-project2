@@ -17,23 +17,23 @@ public class Node {
     private String exitPolicy;
     private String[] family;
 
-    public Node() {}
+    public Node() {
+    }
 
     public Node(
-                String nickname,
-                String fingerprint,
-                LocalDateTime timePublished,
-                String ipAddress,
-                int orPort,
-                int dirPort,
-                String[] flags,
-                String version,
-                int bandwidth,
-                String country,
-                String exitPolicy,
-                String[] family
-    )
-    {
+            String nickname,
+            String fingerprint,
+            LocalDateTime timePublished,
+            String ipAddress,
+            int orPort,
+            int dirPort,
+            String[] flags,
+            String version,
+            int bandwidth,
+            String country,
+            String exitPolicy,
+            String[] family
+    ) {
         this.nickname = nickname;
         this.fingerprint = fingerprint;
         this.timePublished = timePublished;
@@ -48,30 +48,100 @@ public class Node {
         this.family = Arrays.copyOf(family, family.length);
     }
 
-    public String getNickname() {return nickname;}
-    public String getFingerprint() {return fingerprint;}
-    public LocalDateTime getTimePublished() {return timePublished;}
-    public String getIpAddress() {return ipAddress;}
-    public int getOrPort() {return orPort;}
-    public int getDirPort() {return dirPort;}
-    public String[] getFlags() {return flags;}
-    public String getVersion() {return version;}
-    public int getBandwidth() {return bandwidth;}
-    public String getCountry() {return country;}
-    public String getExitPolicy() {return exitPolicy;}
-    public String[] getFamily() {return family;}
+    public String getNickname() {
+        return nickname;
+    }
 
-    
-    public void setNickname(String nickname) {this.nickname = nickname;}
-    public void setFingerprint(String fingerprint) {this.fingerprint = fingerprint;}
-    public void setTimePublished(LocalDateTime timePublished) {this.timePublished =timePublished;}
-    public void setIpAddress(String ipAddress) {this.ipAddress = ipAddress;}
-    public void setOrPort(int orPort) {this.orPort = orPort;}
-    public void setDirPort(int dirPort) {this.dirPort = dirPort;}
-    public void setFlags(String[] flags) {this.flags = Arrays.copyOf(flags, flags.length);}
-    public void setVersion(String version) {this.version = version;}
-    public void setBandwidth(int bandwidth) {this.bandwidth = bandwidth;}
-    public void setCountry(String country) {this.country = country;}
-    public void setExitPolicy(String exitPolicy) {this.exitPolicy = exitPolicy;}
-    public void setFamily(String[] family) { this.family = Arrays.copyOf(family, family.length); }
+    public String getFingerprint() {
+        return fingerprint;
+    }
+
+    public LocalDateTime getTimePublished() {
+        return timePublished;
+    }
+
+    public String getIpAddress() {
+        return ipAddress;
+    }
+
+    public int getOrPort() {
+        return orPort;
+    }
+
+    public int getDirPort() {
+        return dirPort;
+    }
+
+    public String[] getFlags() {
+        return flags;
+    }
+
+    public String getVersion() {
+        return version;
+    }
+
+    public int getBandwidth() {
+        return bandwidth;
+    }
+
+    public String getCountry() {
+        return country;
+    }
+
+    public String getExitPolicy() {
+        return exitPolicy;
+    }
+
+    public String[] getFamily() {
+        return family;
+    }
+
+
+    public void setNickname(String nickname) {
+        this.nickname = nickname;
+    }
+
+    public void setFingerprint(String fingerprint) {
+        this.fingerprint = fingerprint;
+    }
+
+    public void setTimePublished(LocalDateTime timePublished) {
+        this.timePublished = timePublished;
+    }
+
+    public void setIpAddress(String ipAddress) {
+        this.ipAddress = ipAddress;
+    }
+
+    public void setOrPort(int orPort) {
+        this.orPort = orPort;
+    }
+
+    public void setDirPort(int dirPort) {
+        this.dirPort = dirPort;
+    }
+
+    public void setFlags(String[] flags) {
+        this.flags = Arrays.copyOf(flags, flags.length);
+    }
+
+    public void setVersion(String version) {
+        this.version = version;
+    }
+
+    public void setBandwidth(int bandwidth) {
+        this.bandwidth = bandwidth;
+    }
+
+    public void setCountry(String country) {
+        this.country = country;
+    }
+
+    public void setExitPolicy(String exitPolicy) {
+        this.exitPolicy = exitPolicy;
+    }
+
+    public void setFamily(String[] family) {
+        this.family = Arrays.copyOf(family, family.length);
+    }
 }

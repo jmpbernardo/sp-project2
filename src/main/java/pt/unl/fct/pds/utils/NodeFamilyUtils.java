@@ -69,7 +69,7 @@ public class NodeFamilyUtils {
         DescriptorCollector descriptorCollector = DescriptorSourceFactory.createDescriptorCollector();
         descriptorCollector.collectDescriptors(
                 "https://collector.torproject.org",                              // Base URL
-                new String[] { descriptorsSubDir },                                 // Only server descriptors
+                new String[]{descriptorsSubDir},                                 // Only server descriptors
                 //System.currentTimeMillis() -60 * 60 * 1000,                       // Last hour
                 System.currentTimeMillis() - 24L * 60 * 60 * 1000,                  // Last day
                 descriptorsDir,                                                     // Local directory

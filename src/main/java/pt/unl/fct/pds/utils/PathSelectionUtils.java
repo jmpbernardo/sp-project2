@@ -15,7 +15,7 @@ public class PathSelectionUtils {
     public static CandidateNode[] createCandidateNodes(Node[] nodes, int totalBandwidth) {
         return Arrays.stream(nodes)
                 .flatMap(node ->
-                        Arrays.stream(new CandidateNode[] {
+                        Arrays.stream(new CandidateNode[]{
                                 new CandidateNode(node, (double) node.getBandwidth() / (double) totalBandwidth)
                         })
                 ).toArray(CandidateNode[]::new);

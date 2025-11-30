@@ -15,7 +15,6 @@ import java.util.Arrays;
 
 /**
  * Application for Tor Path Selection alternatives.
- *
  */
 public class Project2 {
     public static void main(String[] args) throws Exception {
@@ -41,28 +40,28 @@ public class Project2 {
             PathSelection pathSelection = new CurrentPathSelection(nodes, address);
             Node[] pathNodes = pathSelection.selectPath();
             int minBandwidth = Arrays.stream(pathNodes)
-                                    .mapToInt(Node::getBandwidth)
-                                    .min()
-                                    .orElse(0);
+                    .mapToInt(Node::getBandwidth)
+                    .min()
+                    .orElse(0);
 
             // ... and create circuit.
             Circuit circuit = new Circuit(i, pathNodes, minBandwidth);
 
-          // --- Algorithm 2: Geography-aware path selection ---
-          PathSelection geoPathSelection =
-              new GeoAwarePathSelection(nodes, address, alpha, beta);
-          Node[] geoPathNodes = geoPathSelection.selectPath();
-          int geoMinBw = Arrays.stream(geoPathNodes)
-              .mapToInt(Node::getBandwidth)
-              .min()
-              .orElse(0);
-          Circuit geoCircuit = new Circuit(i, geoPathNodes, geoMinBw);
+            // --- Algorithm 2: Geography-aware path selection ---
+            PathSelection geoPathSelection =
+                    new GeoAwarePathSelection(nodes, address, alpha, beta);
+            Node[] geoPathNodes = geoPathSelection.selectPath();
+            int geoMinBw = Arrays.stream(geoPathNodes)
+                    .mapToInt(Node::getBandwidth)
+                    .min()
+                    .orElse(0);
+            Circuit geoCircuit = new Circuit(i, geoPathNodes, geoMinBw);
 
-          System.out.println("== Alg 1 ==");
-          printCircuit(circuit, address);
+            System.out.println("== Alg 1 ==");
+            printCircuit(circuit, address);
 
-          System.out.println("=== Alg 2==");
-          printCircuit(geoCircuit, address);
+            System.out.println("=== Alg 2==");
+            printCircuit(geoCircuit, address);
 
 /*          Node guard = pathNodes[0];
             Node middle = pathNodes[1];
@@ -84,18 +83,18 @@ public class Project2 {
         System.out.println(node.getNickname() + " " + node.getFingerprint() + " " + node.getIpAddress());
     }
 
-  private static void printCircuit(Circuit circuit, Address address) {
-    Node guard = circuit.getNodes()[0];
-    Node middle = circuit.getNodes()[1];
-    Node exit = circuit.getNodes()[2];
+    private static void printCircuit(Circuit circuit, Address address) {
+        Node guard = circuit.getNodes()[0];
+        Node middle = circuit.getNodes()[1];
+        Node exit = circuit.getNodes()[2];
 
-    System.out.println("Circuit " + circuit.getId() + " (destination: " + address.toString() + "):");
-    System.out.print("    Guard:  ");
-    printNodeInfo(guard);
-    System.out.print("    Middle: ");
-    printNodeInfo(middle);
-    System.out.print("    Exit:   ");
-    printNodeInfo(exit);
-    System.out.println("    Min Bandwidth: " + circuit.getMinBandwidth());
-  }
+        System.out.println("Circuit " + circuit.getId() + " (destination: " + address.toString() + "):");
+        System.out.print("    Guard:  ");
+        printNodeInfo(guard);
+        System.out.print("    Middle: ");
+        printNodeInfo(middle);
+        System.out.print("    Exit:   ");
+        printNodeInfo(exit);
+        System.out.println("    Min Bandwidth: " + circuit.getMinBandwidth());
+    }
 }
