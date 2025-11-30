@@ -1,9 +1,6 @@
 package pt.unl.fct.pds.model;
 
-import pt.unl.fct.pds.model.Node;
-
 import java.util.Arrays;
-
 
 public class Circuit {
     int id;
