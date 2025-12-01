@@ -2,6 +2,7 @@ package pt.unl.fct.pds.model;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.Objects;
 
 public class Node {
     private String nickname;
@@ -143,5 +144,20 @@ public class Node {
 
     public void setFamily(String[] family) {
         this.family = Arrays.copyOf(family, family.length);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Node)) return false;
+        Node node = (Node) o;
+        // consider two nodes equal if they have the same fingerprint
+        return Objects.equals(fingerprint, node.fingerprint);
+    }
+
+    @Override
+    public int hashCode() {
+        // hash based only on fingerprint
+        return Objects.hash(fingerprint);
     }
 }
