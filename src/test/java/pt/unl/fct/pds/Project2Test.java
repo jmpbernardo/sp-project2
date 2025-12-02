@@ -20,6 +20,7 @@ import java.nio.file.Path;
 import java.util.*;
 
 import static org.junit.Assert.*;
+import static pt.unl.fct.pds.utils.GuardNodeUtils.createOrLoadGuardSet;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class Project2Test {
@@ -56,6 +57,7 @@ public class Project2Test {
 
     private static void loadGuardSet() throws IOException {
         Path path = Path.of("guard_set.txt");
+        if (!Files.exists(path)) createOrLoadGuardSet(nodes);
         assertTrue(Files.exists(path));
 
         guardSet = new HashSet<>();
