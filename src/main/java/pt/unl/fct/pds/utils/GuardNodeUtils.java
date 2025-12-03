@@ -66,7 +66,7 @@ public class GuardNodeUtils {
                         .findFirst()
                         .ifPresent(result::add);
             }
-            // NODE: The possibility that the nodes might no longer be in consensus or might be unavailable was not considered.
+            // NOTE: The possibility that the nodes might no longer be in consensus or might be unavailable was not considered.
         } catch (IOException e) {
             return Collections.emptySet();
         }

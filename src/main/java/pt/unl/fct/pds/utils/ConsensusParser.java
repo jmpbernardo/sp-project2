@@ -1,5 +1,7 @@
 package pt.unl.fct.pds.utils;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
@@ -16,6 +18,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
+import java.util.Map;
+import java.util.stream.Collectors;
 import pt.unl.fct.pds.model.Node;
 
 import static pt.unl.fct.pds.utils.NodeFamilyUtils.*;
@@ -59,8 +63,8 @@ public class ConsensusParser {
                 if (line.startsWith("r ")) {
                     if (currentNode != null)
                         nodes.add(currentNode);
-                    currentNode = parseNode(line);
-                    currentNode.setFamily(getNodeFamily(currentNode.getFingerprint(), nodeFamilies));
+                  currentNode = parseNode(line);
+                  currentNode.setFamily(getNodeFamily(currentNode.getFingerprint(), nodeFamilies));
                 } else if (line.startsWith("a ")) {
                     continue;
                 } else if (line.startsWith("s ")) {
@@ -84,28 +88,74 @@ public class ConsensusParser {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        geolocateNodes(nodes);
         return nodes.toArray(new Node[0]);
     }
 
-  /*public String geolocateIP(String ipAddress) throws IOException {
-    if (accountId == null || licenseKey == null) {
-      System.err.println("EVN variables not set");
+  private void geolocateNodes(List<Node> nodes) {
+    final int BATCH_SIZE = 7000;
+
+    for (int i = 0; i < nodes.size(); i += BATCH_SIZE) {
+      int end = Math.min(i + BATCH_SIZE, nodes.size());
+      List<Node> batch = nodes.subList(i, end);
+
+      String ips = batch.stream()
+          .map(Node::getIpAddress)
+          .collect(Collectors.joining(","));
+
+      try {
+        Map<String, String> geoResults = geolocateIPsBatch(ips);
+        for (Node node : batch) {
+          node.setCountry(geoResults.getOrDefault(node.getIpAddress(), "Unknown"));
+        }
+      } catch (IOException e) {
+        System.err.println("Failed to geolocate : " + e.getMessage());
+      }
+    }
+  }
+
+  public Map<String, String> geolocateIPsBatch(String ipAddresses) throws IOException {
+    Map<String, String> results = new HashMap<>();
+
+    URL url = new URL("https://api.ipquery.io/" + ipAddresses);
+    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+    conn.setRequestMethod("GET");
+    conn.setRequestProperty("Accept", "application/json");
+
+    if (conn.getResponseCode() != 200) {
+      throw new RuntimeException("error code: " + conn.getResponseCode());
     }
 
-    //try (WebServiceClient client = new WebServiceClient.Builder(Integer.parseInt(accountId), licenseKey).host("geolite.info").build()) {
-    try (DatabaseReader reader = new DatabaseReader.Builder(database).withCache(new CHMCache())
-        .build()) {
-      InetAddress ip = InetAddress.getByName(ipAddress);
-      CountryResponse response = reader.country(ip);
+    BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+    StringBuilder response = new StringBuilder();
+    String line;
 
-      Country country = response.getCountry();
-      return country.getName();
-    } catch (GeoIp2Exception e) {
-      throw new RuntimeException(e);
+    while ((line = reader.readLine()) != null) {
+      response.append(line);
     }
-  }*/
+    reader.close();
 
-    public String geolocateIP(String ipAddress) throws IOException {
+    // Parse JSON
+    JsonArray jsonArray = JsonParser.parseString(response.toString()).getAsJsonArray();
+
+    for (JsonElement element : jsonArray) {
+      JsonObject obj = element.getAsJsonObject();
+      String ip = obj.get("ip").getAsString();
+      String country = "Unknown";
+
+      if (obj.has("location")) {
+        JsonObject location = obj.getAsJsonObject("location");
+        if (location.has("country")) {
+          country = location.get("country").getAsString();
+        }
+      }
+      results.put(ip, country);
+    }
+
+    return results;
+  }
+
+    /*public String geolocateIP(String ipAddress) throws IOException {
         try {
             URL url = new URL("https://api.ipquery.io/" + ipAddress);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -144,7 +194,7 @@ public class ConsensusParser {
             System.err.println("Failed to geolocate " + ipAddress + ": " + e.getMessage());
             return "Unknown";
         }
-    }
+    }*/
 
 
     private Node parseNode(String line) throws IOException {
@@ -169,8 +219,8 @@ public class ConsensusParser {
         node.setOrPort(Integer.parseInt(parts[7]));
         node.setDirPort(Integer.parseInt(parts[8]));
 
-        String country = geolocateIP(ip);
-        node.setCountry(country);
+       /* String country = geolocateIP(ip);
+        node.setCountry(country);*/
 
         return node;
     }

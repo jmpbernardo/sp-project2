@@ -1,5 +1,6 @@
 package pt.unl.fct.pds;
 
+import java.util.Set;
 import pt.unl.fct.pds.model.Address;
 import pt.unl.fct.pds.model.Circuit;
 import pt.unl.fct.pds.model.Node;
@@ -126,6 +127,7 @@ public class Project2 {
             incrementNodeCount(exitSetAlg2, exitNodeAl2);
         }
 
+
         int m = addresses.length;
 
         // Compute and save results for Algorithm 1.
@@ -165,6 +167,27 @@ public class Project2 {
                 sizeExitSetAlg2, entropyExitSetAlg2,
                 "metrics_results_alg2.csv"
         );
+
+      countCountriesSet(globalSetAlg1.keySet(), 1, "global set");
+      countCountriesSet(guardSetAlg1.keySet(), 1, "guard set");
+      countCountriesSet(middleSetAlg1.keySet(), 1, "middle set");
+      countCountriesSet(exitSetAlg1.keySet(), 1, "exit set");
+
+      countCountriesSet(globalSetAlg2.keySet(), 2, "global set");
+      countCountriesSet(guardSetAlg2.keySet(), 2, "guard set");
+      countCountriesSet(middleSetAlg2.keySet(), 2, "middle set");
+      countCountriesSet(exitSetAlg2.keySet(), 2, "exit set");
+    }
+
+    private static void countCountriesSet(Set<Node> nodes, int algorithmNumber, String setName) {
+      long countriesCount = nodes
+          .stream()
+          .map(Node::getCountry)
+          .filter(country -> !country.equals("Unknown"))
+          .distinct()
+          .count();
+
+      System.out.println("[Alg " + algorithmNumber + "] Number of distinct countries in the " + setName + ": " + countriesCount);
     }
 
     private static String loadMostRecentConsensusDocument() throws IOException {
